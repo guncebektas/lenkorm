@@ -1,4 +1,4 @@
-It’s developer as fluent interface design. You can easily access to database just by using select functions anywhere you want.
+It’s developed as fluent interface design. You can easily access to database just by using select functions anywhere you want.
 
 Build query:
 select(‘users’)->where(‘user_id = “’. $user_id .’” ’)->limit(1);
