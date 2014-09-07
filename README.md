@@ -1,75 +1,78 @@
 It’s developed as fluent interface design. You can easily access to database just by using select functions anywhere you want.
 
-Build query:
+<b>Build query:</b>
 select(‘users’)->where(‘user_id = “’. $user_id .’” ’)->limit(1);
-Run query:
+
+<b>Run query:</b>
 select(‘users’)->where(‘user_id = “’. $user_id .’” ’)->limit(1)->run;
-Fetch result
+
+<b>Fetch result</b>
 select(‘users’)->where(‘user_id = “’. $user_id .’” ’)->limit(1)->result();
+
 
 Easy to read & write, isn’t it? You can use helper functions insert(), replace(), update(), delete() and select() in everywhere including functions without calling global $pdo. For other features please call global $pdo variable.
 
 Let’s look it deeply with examples… 
 For examples I will use ‘users’ as table name of users, and ‘langs’ for table name of available languages
 
-find(‘users’, 1)
+<b>find(‘users’, 1)</b>
 Returns just one row of selected table with the match of first column 
 
-select(‘users’)
+<b>select(‘users’)</b>
 Returns the row of selected table
 It means “select * from” to change * use ->which() after select()
 
-left(‘langs ON langs.lang_id = users.lang_id’)
+<b>left(‘langs ON langs.lang_id = users.lang_id’)</b>
 LEFT JOIN statement for select, usage is;
 select(‘users’)->left(‘langs ON langs.lang_id = users.lang_id’)->results();
 
-insert(‘users’)->values(array)
+<b>insert(‘users’)->values(array)</b>
 insert(‘users’)->values(array(‘user_name’=>’Jon Snow’));
 
-replace(‘users’)->values(array)
+<b>replace(‘users’)->values(array)</b>
 replace(‘users’)->values(array(‘user_name’=>’Jon Snow’));
 
-update(‘users’)->values(array)
+<b>update(‘users’)->values(array)</b>
 update(‘users’)->values(array(‘user_name’=>’Jon Snow’))->where(‘user_id = 1’);
 
-where()
+<b>where()</b>
 select(‘users’)->where(‘user_id = 1’)->result();
 
-* which()
+<b>* which()</b>
 I know which statement is a little bit odd but it’s simple and points * for select queries like;
 select(‘users’)->which(‘user_name, users.lang_id AS lang_id)
 
-group()
+<b>group()</b>
 select(‘users’)->group(‘lang_id’);
 
-have()
+<b>have()</b>
 select(‘users’)->have(‘lang_id’);
 
-order()
+<b>order()</b>
 ->order(‘user_id ASC’);
 
-limit()
+<b>limit()</b>
 ->limit(10);
 
-offset()
+<b>offset()</b>
 ->offset(10);
 
-column() – final function 
+<b>column() – final function </b>
 column(‘users’)
 
-write() – final function
+<b>write() – final function</b>
 shows query
 
-* run() – final function
+<b>* run() – final function</b>
 ->run();
 
-* result() – final function
+<b>* result() – final function</b>
 ->result();
 
-* results() – final function
+<b>* results() – final function</b>
 ->results();
 
-results_pairs() – final function (Beta)
+<b>results_pairs() – final function (Beta)</b>
 Gather results as pair, is very useful when working with lists
 ->results_pairs();
 
