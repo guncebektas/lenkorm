@@ -1,5 +1,5 @@
 <?php
-/* LenkaORM is a simple and smart SQL query builder for PDO.
+/* LenkORM is a simple and smart SQL query builder for PDO.
  * 
  * If you will use ORM, you have to end your query string with (expect insert_id, find, columns, insert)
  * 
