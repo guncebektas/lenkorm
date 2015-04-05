@@ -11,6 +11,27 @@
  * otherwise you will only create query string!
  * 
  * insert_id, find, columns, insert methods will be exacuted directly 
+ * 
+ * Examples:
+   
+
+   select('slides')->results();	
+
+   insert('slides')->values(array('slide_img'=>$_POST['slide_img'], 
+									  'slide_title'=>$_POST['slide_title'],
+									  'slide_text'=>$_POST['slide_text'],
+									  'slide_href'=>$_POST['slide_href']));
+  
+	update('slides')->values(array('slide_img'=>$_POST['slide_img'], 
+									  'slide_title'=>$_POST['slide_title'],
+									  'slide_text'=>$_POST['slide_text'],
+									  'slide_href'=>$_POST['slide_href']))->where('slide_id = 1');
+
+ * 
+ * 
+ * 
+ * PS: use security function in where clause to block SQL injection like 
+ * ->where('slide_id = '.security($_GET['slide_id']));
  */
 class _pdo extends PDO 
 {
@@ -37,8 +58,10 @@ class _pdo extends PDO
 	
 	function __construct($db)
 	{
+		/*
         try 
         {
+		*/
         	/* Connect to database */
             parent::__construct($db['type'].':host='.$db['server'].';dbname='.$db['db_name'].';'.$db['charset'],$db['user'],$db['pass'],array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'utf8'"));
             /* Extend PDO statement class*/
@@ -48,14 +71,19 @@ class _pdo extends PDO
 			/* Set default fetch mode*/
 			$this->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 			/* Include UPDATED QUERIES in to rowcount() function */
-			$this->setAttribute(PDO::MYSQL_ATTR_FOUND_ROWS, true);
+			//$this->setAttribute(PDO::MYSQL_ATTR_FOUND_ROWS, true);
 			/* Error mode is exception */
             $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } 
+        
+		/*
+		} 
         catch(PDOException $e)
         {                
-            die('Error: '. $e->getMessage());
+            die('<p><strong>Error:</strong> '. $e->getMessage(). '</p>
+            	 <p><strong>File:</strong> '. $e->getFile(). '</br>
+            	 <p><strong>Line:</strong> '. $e->getLine(). '</p>');
         }
+		*/
     }
 	/* Last inserted id; usage $pdo->insert_id() */
 	public function insert_id()
@@ -65,18 +93,23 @@ class _pdo extends PDO
 	/* Return just one row of selected table with the match of first column in the table */
 	public function find($table, $id)
 	{
-		$columns = $this->column($table);
-		return $this->select($table)->where($columns['Field'] ." = ".$id)->limit(1)->result();
+		$columns = $this->column(security($table));
+		return $this->select(security($table))->where($columns['Field'] ." = ".security($id))->limit(1)->result();
 	}
 	/* Return the rows of selected table */
 	public function select($table)
 	{		
-		$this->query = "SELECT * FROM ".$table." ";		
+		$this->query = "SELECT * FROM ".security($table)." ";		
 		return $this;		
 	}
 	public function left($condition)
 	{
-		$this->query .= "LEFT JOIN ".$condition." ";
+		$this->query .= "LEFT JOIN ".security($condition)." ";
+		return $this;
+	}
+	public function using($column)
+	{
+		$this->query .= " USING (".security($column).")";
 		return $this;
 	}
 	/* Insert and Update methods are determining private variable type and these two methods are working with values method 
@@ -88,21 +121,21 @@ class _pdo extends PDO
 	{
 		$this->type = 'insert';
 		
-		$this->query = "INSERT INTO ".$table." ";
+		$this->query = "INSERT INTO ".security($table)." ";
 		return $this;
 	}
 	public function replace($table)
 	{
 		$this->type = 'insert';
 		
-		$this->query = "REPLACE INTO ".$table." ";
+		$this->query = "REPLACE INTO ".security($table)." ";
 		return $this;
 	}
 	public function update($table)
 	{
 		$this->type = 'update';
 		
-		$this->query = "UPDATE ".$table." SET ";
+		$this->query = "UPDATE ".security($table)." SET ";
 		return $this;
 	}
 	/* Values method prepares the query for insert and update methods 
@@ -138,8 +171,9 @@ class _pdo extends PDO
 				else
 					$row .= ')';
 			}	
-			$this->query .= $row;
+			$this->query .= security($row);
 			$query = $this->prepare($this->query);
+			
 			$query->execute($values);
 		}
 		// Example: UPDATE books SET title=:title, author=:author		
@@ -147,7 +181,7 @@ class _pdo extends PDO
 		{
 			for ($i = 0; $i<count($values); $i++)
 			{
-				$this->query .= $keys[$i].' = :'.$keys[$i].' '; 
+				$this->query .= security($keys[$i]).' = :'.security($keys[$i]).' '; 
 				if ($i != count($values) - 1 )	
 					$this->query .= ', ';	
 			} 
@@ -159,14 +193,14 @@ class _pdo extends PDO
 	{
 		if (empty($key))
 		{
-			$this->query = "DELETE FROM ".$table." ";		
+			$this->query = "DELETE FROM ".security($table)." ";		
 			return $this;
 		}
 		else 
 		{
 			// Key is not empty, so delete by first column match
 			$columns = $this->column($table);
-			$this->delete($table)->where(''.$columns['Field'] .' = "'.$key.'"')->limit(1)->run();
+			$this->delete($table)->where(''.security($columns['Field']) .' = "'.security($key).'"')->limit(1)->run();
 		}
 	}
 	// Where condition
@@ -178,6 +212,7 @@ class _pdo extends PDO
 		{
 			$query = $this->prepare($this->query);
 			$query->execute($this->values);
+			
 			return $this;
 		}	
 		else
@@ -191,37 +226,37 @@ class _pdo extends PDO
 	 */
 	public function which($condition)
 	{
-		$this->query = str_replace('*', $condition, $this->query);
+		$this->query = str_replace('*', security($condition), $this->query);
 		return $this;
 	}
 	// Group condition
 	public function group($condition)
 	{
-		$this->query .= " GROUP BY ".$condition;
+		$this->query .= " GROUP BY ".security($condition);
 		return $this;		
 	}
 	// Having condition
 	public function have($condition)
 	{
-		$this->query .= " HAVING ".$condition;
+		$this->query .= " HAVING ".security($condition);
 		return $this;		
 	}
 	// Order condition
 	public function order($condition)
 	{
-		$this->query .= " ORDER BY ".$condition;
+		$this->query .= " ORDER BY ".security($condition);
 		return $this;
 	}
 	// Limit condition
 	public function limit($limit = 3000)
 	{
-		$this->query .= " LIMIT ".$limit." ";
+		$this->query .= " LIMIT ".(int)$limit." ";
 		return $this;
 	}
 	// Offset condition
 	public function offset($offset = 3000)
 	{
-		$this->query .= " OFFSET ".$offset." ";
+		$this->query .= " OFFSET ".(int)$offset." ";
 		return $this;
 	}
 	// Return the columns of table
@@ -323,6 +358,11 @@ function select($table)
 	global $pdo;	
 	return $pdo->select($table);
 }
+function find($table, $id)
+{
+	global $pdo;	
+	return $pdo->find($table, $id);
+}
 function insert($table)
 {
 	global $pdo;	
@@ -340,6 +380,92 @@ function update($table)
 }
 function delete($table, $key = '')
 {
-	global $pdo;	
+	global $pdo;
 	return $pdo->delete($table, $key);
+}
+
+// Main security function to check strings
+function security($input)
+{
+	// Clear not allowed chars
+	$input = preg_replace('/([\x00-\x08][\x0b-\x0c][\x0e-\x20])/', '', $input);
+	
+	// Search for these
+	$search = 'abcdefghijklmnopqrstuvwxyz';
+	$search .= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	$search .= '1234567890!@#$%^&*()';
+	$search .= '~`";:?+/={}[]-_|\'\\';
+	
+	// Clear not allowed chars again
+	for ($i = 0; $i < strlen($search); $i++) 
+	{
+		$input = preg_replace('/(&#[x|X]0{0,8}'.dechex(ord($search[$i])).';?)/i', $search[$i], $input);
+		$input = preg_replace('/(&#0{0,8}'.ord($search[$i]).';?)/', $search[$i], $input);
+	}
+	
+	// Remove java, flash etc.. 
+	$ra1 = Array('javascript', 'vbscript', 'expression', 'applet', 'meta', 'xml', 'blink', 'link', 'style', 'script', 'embed', 'object', 'iframe', 'frame', 'frameset', 'ilayer', 'layer', 'bgsound', 'title', 'base');
+	$ra2 = Array('onabort', 'onactivate', 'onafterprint', 'onafterupdate', 'onbeforeactivate', 'onbeforecopy', 'onbeforecut', 'onbeforedeactivate', 'onbeforeeditfocus', 'onbeforepaste', 'onbeforeprint', 'onbeforeunload', 'onbeforeupdate', 'onblur', 'onbounce', 'oncellchange', 'onchange', 'onclick', 'oncontextmenu', 'oncontrolselect', 'oncopy', 'oncut', 'ondataavailable', 'ondatasetchanged', 'ondatasetcomplete', 'ondblclick', 'ondeactivate', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onerror', 'onerrorupdate', 'onfilterchange', 'onfinish', 'onfocus', 'onfocusin', 'onfocusout', 'onhelp', 'onkeydown', 'onkeypress', 'onkeyup', 'onlayoutcomplete', 'onload', 'onlosecapture', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onmousewheel', 'onmove', 'onmoveend', 'onmovestart', 'onpaste', 'onpropertychange', 'onreadystatechange', 'onreset', 'onresize', 'onresizeend', 'onresizestart', 'onrowenter', 'onrowexit', 'onrowsdelete', 'onrowsinserted', 'onscroll', 'onselect', 'onselectionchange', 'onselectstart', 'onstart', 'onstop', 'onsubmit', 'onunload');
+	
+	// Merge arrays
+	$ra = array_merge($ra1, $ra2);
+	
+	// Remove possible threats which are defined above
+	$find = true;
+	while ($find == true) 
+	{
+		$first = $input;
+		for ($i = 0; $i < sizeof($ra); $i++) 
+		{
+			$action = '/';
+			for ($j = 0; $j < strlen($ra[$i]); $j++) 
+			{
+				if ($j > 0) 
+				{
+					$action .= '(';
+					$action .= '(&#[x|X]0{0,8}([9][a][b]);?)?';
+					$action .= '|(&#0{0,8}([9][10][13]);?)?';
+					$action .= ')?';
+				}
+				$action .= $ra[$i][$j];
+			}
+			
+			$action .= '/i';
+			$change = substr($ra[$i], 0, 2).'<x>'.substr($ra[$i], 2);
+			$input = preg_replace($action, $change, $input);
+			
+			if ($first == $input) 
+			{
+				$find = false;
+			}
+		}
+	}
+	
+	// Allowed tags
+	$result = strip_tags($input, '<p><strong><em><b><i><ul><li><pre><hr><blockquote><span>');
+	
+	// Change special chars to their html version 
+	$result = htmlspecialchars($result);
+
+	// \n to <br>
+	$result = str_replace("\n", "<br />", $result);
+
+	// Add slash
+	$result = addslashes($result);
+
+	return $result;
+}
+
+// Clear unnecessary chars
+function clean($input)
+{
+    $input = str_replace("\'", "'", $input);
+	$input = str_replace("\\\\", "\\", $input);
+	$input = str_replace("<br />", "\n", $input);
+	$input = str_replace("&amp;", "&", $input);
+	$input = str_replace("&quot;", "\"", $input);
+	$input = str_replace("<", "&lt;", $input);
+	$input = str_replace(">", "&gt;", $input);
+
+	return $input;
 }
