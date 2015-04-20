@@ -11,14 +11,22 @@
  * insert_id, find, columns, insert methods will be exacuted directly 
  * 
  * Examples:
-   
-
+ * 
+ * 1. THIS WILL SELECT ALL ROWS IN SLIDES TABLE
    select('slides')->results();	
+
+ * 
+ * 
+ * 2. INSERT ARRAY INTO SLIDES TABLE 
 
    insert('slides')->values(array('slide_img'=>$_POST['slide_img'], 
 									  'slide_title'=>$_POST['slide_title'],
 									  'slide_text'=>$_POST['slide_text'],
 									  'slide_href'=>$_POST['slide_href']));
+
+ * 
+ * 
+ * 3. UPDATE SLIDES TABLE 
   
 	update('slides')->values(array('slide_img'=>$_POST['slide_img'], 
 									  'slide_title'=>$_POST['slide_title'],
@@ -26,9 +34,9 @@
 									  'slide_href'=>$_POST['slide_href']))->where('slide_id = 1');
 
  * 
+ * PS 1: you can put array into values like values($_POST) if columns match with the index of array
  * 
- * 
- * PS: use security function in where clause to block SQL injection like 
+ * PS 2: use security function in where clause to block SQL injection like 
  * ->where('slide_id = '.security($_GET['slide_id']));
  */
 class _pdo extends PDO 
