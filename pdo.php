@@ -1,8 +1,6 @@
 <?php
 /* LenkORM is a simple and smart SQL query builder for PDO.
  * 
- * If you will use ORM, you have to end your query string with (expect insert_id, find, columns, insert)
- * 
  * ->write 		: will show you the query string
  * ->run		: will run the query
  * ->result		: will return the result of selected result (only one row)
