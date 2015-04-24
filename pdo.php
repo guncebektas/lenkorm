@@ -336,14 +336,39 @@ class _pdo extends PDO
      */
     final public function result($key = '')
     {
-        $query = $this->run(true);
+    	if (!$this->memcache) {
+            $query = $this->run(true);
 
-        if (!$key) {
-            return $query->fetch();
+	        if (!$key) {
+	            return $query->fetch();
+	        } else {
+	            $result = $query->fetch();
+	
+	            return $result[$key];
+	        }
+        }
+
+        $memcache = new Memcache();
+        $memcache->connect('127.0.0.1', 11211) or die('MemCached connection error!');
+
+        $data = $memcache->get('query-'.md5($this->query));
+        
+        if (!isset($data) || $data === false) {
+            $query = $this->run(true);
+
+	        if (!$key) {
+	            return $query->fetch();
+	        } else {
+	            $result = $query->fetch();
+	
+	            return $result[$key];
+	        }
+
+            $memcache->set('query-'.md5($this->query), $result, MEMCACHE_COMPRESSED, 9000);
+
+            return $result;
         } else {
-            $result = $query->fetch();
-
-            return $result[$key];
+            return $data;
         }
     }
     /* Run and get the result set of the query
