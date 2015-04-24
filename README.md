@@ -1,3 +1,5 @@
+<h1>Query builder for PDO with memcache support</h1>
+
 It’s developed as fluent interface design. You can easily access to database just by using select functions anywhere you want.
 
 <b>Build query:</b>
@@ -76,3 +78,5 @@ shows query
 Gather results as pair, is very useful when working with lists
 ->results_pairs();
 
+<b>PS:</b>
+You can send arrays as parameters to insert or update a column, query builder will automatically detecet and change it into json
