@@ -49,7 +49,6 @@ $db = array(
   'pass' => '',
   'charset' => 'charset=utf8',
 );
-
 $pdo = new _pdo($db);
 
 class _pdo extends PDO
@@ -75,7 +74,11 @@ class _pdo extends PDO
      */
     private $values;
 
-    /* Memcached option */
+    /* Caching with memcache 
+	 * 
+	 * @access public
+     * @var bool
+	 */
     private $memcache = false;
 
     public function __construct($db)
@@ -107,31 +110,48 @@ class _pdo extends PDO
         }
         */
     }
-    /* Last inserted id; usage $pdo->insert_id() */
+    /* Last inserted id; usage $pdo->insert_id() 
+	 * 
+	 */
     public function insert_id()
     {
         return $this->lastInsertId();
     }
-    /* Return just one row of selected table with the match of first column in the table */
+    /* Return just one row of selected table with 
+	 * the match of first column in the table 
+	 * 
+	 * find('coupons', 5);
+	 */
     public function find($table, $id)
     {
         $columns = $this->column(security($table));
 
         return $this->select(security($table))->where($columns['Field'].' = '.security($id))->limit(1)->result();
     }
-    /* Return the rows of selected table */
+    /* Return the rows of selected table 
+	 * 
+	 * select('coupons')->where('coupon_id = 5')->result();
+	 */
     public function select($table)
     {
         $this->query = 'SELECT * FROM '.security($table).' ';
 
         return $this;
     }
+	/* LEFT JOIN function 
+	 * 
+	 * select('contents')->left('categories ON categories.category_id = contents.category_id')->where('author_id = 2')->results();
+	 */
     public function left($condition)
     {
         $this->query .= 'LEFT JOIN '.security($condition).' ';
 
         return $this;
     }
+	/* USING clause 
+	 * 
+	 * select('contents')->left('categories')->using('category_id')->where('content_id = 2')->result();
+	 */
     public function using($column)
     {
         $this->query .= ' USING ('.security($column).')';
@@ -142,6 +162,8 @@ class _pdo extends PDO
      *
      * Insert prepares the statement and runs it with the given variables
      * Update prepates the statement but where methods runs it because of the syntex
+	 * 
+	 * insert('coupons')->values(array[]);
      */
     public function insert($table)
     {
@@ -167,6 +189,28 @@ class _pdo extends PDO
 
         return $this;
     }
+	/* Increase a value 
+	 * 
+	 * update('coupons')->increase('coupon_amount')->where('coupon_id = 2');
+	 */
+	public function increase($column, $value = 1)
+	{
+		$column = security($column);
+		$this->query .= $column.' = '.$column.' + '.(int)$value.' ';
+
+        return $this;
+	}
+	/* Decrease a value 
+	 * 
+	 * update('coupons')->decrease('coupon_amount', 4)->where('coupon_id = 2');
+	 */
+	public function decrease($column, $value = 1)
+	{
+		$column = security($column);
+		$this->query .= $column.' = '.$column.' - '.(int)$value.' ';
+
+        return $this;
+	}
     /* Values method prepares the query for insert and update methods
      *
      * It also runs the query for insert queries, update queries will run after where clause is completed
@@ -223,7 +267,10 @@ class _pdo extends PDO
             return $this;
         }
     }
-    /* Delete from table, if key is not empty method will delete row by the first column match */
+    /* Delete from table, if key is not empty method will delete row by the first column match 
+	 * 
+	 * delete('coupons')->where('coupon_id = 5');
+	 */
     public function delete($table, $key = '')
     {
         if (empty($key)) {
@@ -269,49 +316,66 @@ class _pdo extends PDO
 
         return $this;
     }
-    // Group condition
+    /* Group condition
+	 * 
+	 */
     public function group($condition)
     {
         $this->query .= ' GROUP BY '.security($condition);
 
         return $this;
     }
-    // Having condition
+    /* Having condition
+	 * 
+	 */
     public function have($condition)
     {
         $this->query .= ' HAVING '.security($condition);
 
         return $this;
     }
-    // Order condition
+    /* Order condition
+	 * 
+	 */
     public function order($condition)
     {
         $this->query .= ' ORDER BY '.security($condition);
 
         return $this;
     }
-    // Limit condition
+    /* Limit condition
+	 * 
+	 * select('contents')->where('author_id = 2')->order('content_time DESC')->limit(100);
+	 */
     public function limit($limit = 3000)
     {
         $this->query .= ' LIMIT '.(int) $limit.' ';
 
         return $this;
     }
-    // Offset condition
+    /* Offset condition
+	 * 
+	 */
     public function offset($offset = 3000)
     {
         $this->query .= ' OFFSET '.(int) $offset.' ';
 
         return $this;
     }
-    // Return the columns of table
+    /* Return the columns of table
+	 * 
+	 * column('coupons')
+	 */
     public function column($table)
     {
         $query = $this->query('SHOW COLUMNS FROM '.$table);
 
         return $query->fetch();
     }
-    // Echo query string, not works with methods, which returns data set, such as find, coluns etc...
+    /* Echo query string, not works with methods, which returns data set, such as find, coluns etc...
+	 * 
+	 * select('coupons')->where('coupon_id = 5')->write();
+	 */
     final public function write()
     {
         echo $this->query;
@@ -331,12 +395,15 @@ class _pdo extends PDO
     }
     /* Run and get the value of query
      *
+	 * select('coupons')->where('coupon_id = 5')->result();
+	 * select('coupons')->where('coupon_id = 5')->result('coupon_name);
+	 * 
      * @param $key optional
      * @return result set
      */
     final public function result($key = '')
     {
-    	if (!$this->memcache) {
+        if (!$this->memcache) {
             $query = $this->run(true);
 
 	        if (!$key) {
@@ -373,6 +440,8 @@ class _pdo extends PDO
     }
     /* Run and get the result set of the query
      *
+	 * select('coupons')->where('coupon_id = 5')->results();
+	 * 
      * @return results set
      */
     final public function results()
