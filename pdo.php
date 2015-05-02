@@ -6,6 +6,7 @@
  * @author   	guncebektas <info@guncebektas.com>
  * @license  	http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link     	http://guncebektas.com
+ * @link		http://github.com/guncebektas/lenkorm
  * 
  * ->write 		: will show you the query string
  * ->run		: will run the query
