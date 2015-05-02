@@ -79,4 +79,4 @@ Gather results as pair, is very useful when working with lists
 ->results_pairs();
 
 <b>PS:</b>
-You can send arrays as parameters to insert or update a column, query builder will automatically detecet and change it into json
+You can send arrays as parameters to insert or update a column, query builder will automatically detect and change it into json
