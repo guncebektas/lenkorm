@@ -216,13 +216,98 @@ class _pdo extends PDO
 
         return $this;
     }
+	/** Delete from table, if key is not empty method will delete row by the first column match 
+	 * 
+	 * @example delete('coupons')->where('coupon_id = 5');
+	 * 
+	 * @param string  $table  table name
+	 * @param int  $id  unique id to match with the first column of table
+	 * @return deletes from the table
+	 */
+    public function delete($table, $id = '')
+    {
+        if (empty($key)) {
+            $this->query = 'DELETE FROM '.security($table).' ';
+
+            return $this;
+        } else {
+            // Key is not empty, so delete by first column match
+            $columns = $this->column($table);
+            $this->delete($table)->where(''.security($columns['Field']).' = "'.security($id).'"')->limit(1)->run();
+        }
+    }
+	/** Alter table
+	 * 
+	 * @param string  $table  table name
+	 * @return string
+	 */
+	public function alter($table)
+	{
+		$this->query = 'ALTER TABLE '.security($table).' ';
+		
+		return $this;
+	}
+	/** Rename table
+	 * 
+	 * @example alter('slides')->rename_to('carousel');
+	 * 
+	 * @param string  $new_name  table name
+	 * @return runs query
+	 */
+	public function rename_to($new_name)
+	{
+		$this->query .= 'RENAME TO '.security($column).' '.security($datatype);
+		
+		$this->query($this->query);
+	}
+	/** Add column into table
+	 * 
+	 * @example alter('slides')->add_column('slide_index','slide_id');
+	 * 
+	 * @param string  $column  column name
+	 * @param string  $datatype  data type
+	 * @return runs query
+	 */
+	public function add_column($column, $datatype)
+	{
+		$this->query .= 'MODIFY COLUMN '.security($column).' '.security($datatype);
+		
+		$this->query($this->query);
+	}
+	/** Drop column from table
+	 * 
+	 * @example alter('slides')->drop_column('slides');
+	 * 
+	 * @param string  $column  column name
+	 * @param string  $datatype  data type
+	 * @return runs query
+	 */
+	public function drop_column($column)
+	{
+		$this->query .= 'DROP COLUMN '.security($column);
+		
+		$this->query($this->query);
+	}
+	/** Add index into table
+	 * 
+	 * @example alter('slides')->add_index('slide_index','slide_id');
+	 * 
+	 * @param string  $name  table name
+	 * @param string  $column  column name
+	 * @return runs query
+	 */
+	public function add_index($name, $column)
+	{
+		$this->query .= 'ADD INDEX '.security($name).' ('.security($column).')';
+		
+		$this->query($this->query);
+	}
 	/** Increase a value 
 	 * 
 	 * @example update('coupons')->increase('coupon_amount')->where('coupon_id = 2');
 	 * 
 	 * @param string  $column  column name of table
 	 * @param int  optional $value  amount to increase
-	 * 
 	 * @return string
 	 */
 	public function increase($column, $value = 1)
@@ -238,7 +323,6 @@ class _pdo extends PDO
 	 *
 	 * @param string  $column  column name of table
 	 * @param int  optional $value  amount to decrease
-	 * 
 	 * @return string
 	 */
 	public function decrease($column, $value = 1)
@@ -307,27 +391,6 @@ class _pdo extends PDO
             }
 
             return $this;
-        }
-    }
-    /** Delete from table, if key is not empty method will delete row by the first column match 
-	 * 
-	 * @example delete('coupons')->where('coupon_id = 5');
-	 * 
-	 * @param string  $table  table name
-	 * @param int  $id  unique id to match with the first column of table
-	 * 
-	 * @return deletes from the table
-	 */
-    public function delete($table, $id = '')
-    {
-        if (empty($key)) {
-            $this->query = 'DELETE FROM '.security($table).' ';
-
-            return $this;
-        } else {
-            // Key is not empty, so delete by first column match
-            $columns = $this->column($table);
-            $this->delete($table)->where(''.security($columns['Field']).' = "'.security($id).'"')->limit(1)->run();
         }
     }
     /** Where condition
@@ -465,7 +528,7 @@ class _pdo extends PDO
 	 * @example select('coupons')->where('coupon_id = 5')->result();
 	 * @example select('coupons')->where('coupon_id = 5')->result('coupon_name);
 	 * 
-     * @param $key  optional  string
+     * @param string  optional  $key    
      * @return if $key is empty it returns an array else a string
      */
     final public function result($key = '')
@@ -537,8 +600,9 @@ class _pdo extends PDO
     }
     /** Gather results as pair, is very useful when working with lists
      *
-     * @param $key
-     * @param $values
+     * @param string  $key
+     * @param string  $values
+	 * @return array  data set as pairs
      */
     final public function results_pairs($key, $values = '')
     {
@@ -646,6 +710,16 @@ function delete($table, $key = '')
     return $pdo->delete($table, $key);
 }
 /** 
+ * @example alter('slides')->add_index('slide_index', 'slide_id');
+ * 
+ */
+function alter($table)
+{
+    global $pdo;
+
+    return $pdo->alter($table);
+}
+/** 
  * @example last_id();
  * 
  */
@@ -655,10 +729,6 @@ function last_id()
 	
 	return $pdo->insert_id();
 }
-
-
-
-
 
 /** Main security function to check strings
  * 
