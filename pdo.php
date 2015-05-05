@@ -473,7 +473,7 @@ class _pdo extends PDO
 	 */
     public function limit($limit = 3000)
     {
-        $this->query .= ' LIMIT '.$limit.' ';
+        $this->query .= ' LIMIT '.security($limit).' ';
 
         return $this;
     }
@@ -484,7 +484,7 @@ class _pdo extends PDO
 	 */
     public function offset($offset = 3000)
     {
-        $this->query .= ' OFFSET '.$offset.' ';
+        $this->query .= ' OFFSET '.security($offset).' ';
 
         return $this;
     }
