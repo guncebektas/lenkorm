@@ -501,6 +501,15 @@ class _pdo extends PDO
 
         return $query->fetch();
     }
+	/** Return query string
+	 * 
+	 * @example select('coupons')->where('coupon_id = 5')->text();
+	 * @return return query as a string
+	 */
+    public function text()
+    {
+        return $this->query;
+    }
     /** Writes query string to screen, not works with methods, which returns data set, such as find, coluns etc...
 	 * 
 	 * @example select('coupons')->where('coupon_id = 5')->write();
