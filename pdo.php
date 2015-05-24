@@ -616,6 +616,19 @@ class _pdo extends PDO
 
         return $res;
     }
+	/** Return number of rows in table
+	 *
+	 * @example select('coupons')->where('coupon_id > 3')->num_rows();
+	 * 
+	 * @return int
+	 */
+	public final function num_rows()
+	{
+		$query = $this->run(true);
+		
+		$query = $this->query($this->query);
+		return $query->num_rows();
+	}
 }
 /* Extend PDOStatement for some methods */
 class _pdo_statement extends PDOStatement
