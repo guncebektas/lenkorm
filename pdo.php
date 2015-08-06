@@ -226,7 +226,7 @@ class _pdo extends PDO
 	 */
     public function delete($table, $id = '')
     {
-        if (empty($key)) {
+        if (empty($id)) {
             $this->query = 'DELETE FROM '.security($table).' ';
 
             return $this;
