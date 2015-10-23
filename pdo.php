@@ -89,8 +89,9 @@ class _pdo extends PDO
 	 * @access public
      * @var bool
 	 */
-    private $memcache = false;
-
+    public $memcache = false;
+	public $cache_time = 600;
+	
     public function __construct($db)
     {
         /*
@@ -378,7 +379,13 @@ class _pdo extends PDO
 				
 				$res[] = $value;
 			}
-			
+			/*
+			echo $this->query;
+			// Bind params
+			foreach ($keys AS $key){
+				$this->bindParam(':'.$key, $key);
+			}
+			*/
             $query->execute($res);
         }
         /* UPDATE books SET title=:title, author=:author */
@@ -438,7 +445,7 @@ class _pdo extends PDO
 	 */
     public function group($condition)
     {
-        $this->query .= ' GROUP BY '.security($condition);
+        $this->query .= ' GROUP BY '.security($condition);;
 
         return $this;
     }
@@ -449,7 +456,7 @@ class _pdo extends PDO
 	 */
     public function have($condition)
     {
-        $this->query .= ' HAVING '.security($condition);
+        $this->query .= ' HAVING '.$condition;
 
         return $this;
     }
@@ -473,7 +480,7 @@ class _pdo extends PDO
 	 */
     public function limit($limit = 3000)
     {
-        $this->query .= ' LIMIT '.security($limit).' ';
+        $this->query .= ' LIMIT '. security($limit).' ';
 
         return $this;
     }
@@ -484,7 +491,7 @@ class _pdo extends PDO
 	 */
     public function offset($offset = 3000)
     {
-        $this->query .= ' OFFSET '.security($offset).' ';
+        $this->query .= ' OFFSET '. security($offset).' ';
 
         return $this;
     }
@@ -497,18 +504,9 @@ class _pdo extends PDO
 	 */
     public function column($table)
     {
-        $query = $this->query('SHOW COLUMNS FROM '.$table);
+        $query = $this->query('SHOW COLUMNS FROM '.security($table));
 
         return $query->fetch();
-    }
-	/** Return query string
-	 * 
-	 * @example select('coupons')->where('coupon_id = 5')->text();
-	 * @return return query as a string
-	 */
-    public function text()
-    {
-        return $this->query;
     }
     /** Writes query string to screen, not works with methods, which returns data set, such as find, coluns etc...
 	 * 
@@ -570,7 +568,7 @@ class _pdo extends PDO
 	            return $result[$key];
 	        }
 
-            $memcache->set('query-'.md5($this->query), $result, MEMCACHE_COMPRESSED, 9000);
+            $memcache->set('query-'.md5($this->query), $result, MEMCACHE_COMPRESSED, $this->cache_time);
 
             return $result;
         } else {
@@ -583,9 +581,9 @@ class _pdo extends PDO
 	 * 
      * @return array  results set
      */
-    final public function results()
+    final public function results($cache = true)
     {
-        if (!$this->memcache) {
+    	if (!$this->memcache || $cache == false) {
             $query = $this->run(true);
             $results = $query->fetch_array();
 
@@ -600,7 +598,7 @@ class _pdo extends PDO
             $query = $this->run(true);
             $results = $query->fetch_array();
 
-            $memcache->set('query-'.md5($this->query), $results, MEMCACHE_COMPRESSED, 9000);
+            $memcache->set('query-'.md5($this->query), $results, MEMCACHE_COMPRESSED, $this->cache_time);
 
             return $results;
         } else {
@@ -625,19 +623,6 @@ class _pdo extends PDO
 
         return $res;
     }
-	/** Return number of rows in table
-	 *
-	 * @example select('coupons')->where('coupon_id > 3')->num_rows();
-	 * 
-	 * @return int
-	 */
-	public final function num_rows()
-	{
-		$query = $this->run(true);
-		
-		$query = $this->query($this->query);
-		return $query->num_rows();
-	}
 }
 /* Extend PDOStatement for some methods */
 class _pdo_statement extends PDOStatement
