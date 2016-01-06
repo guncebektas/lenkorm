@@ -623,6 +623,19 @@ class _pdo extends PDO
 
         return $res;
     }
+    /** Number of rows
+     *
+     * @example select('users')->num_rows();
+     * @return integer
+     */
+    final public function num_rows()
+    {
+        $query = $this->run(true);
+        return $query->num_rows();
+
+        $results = $query->fetch_array();
+        return count($results);
+    }
 }
 /* Extend PDOStatement for some methods */
 class _pdo_statement extends PDOStatement
